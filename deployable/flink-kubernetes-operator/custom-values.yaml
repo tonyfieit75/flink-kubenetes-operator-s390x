@@ -1,0 +1,29 @@
+image:
+  repository: quay.io/tonyfieit75/flink-kubernetes-operator
+  tag: "s390x-1.13"
+  pullPolicy: IfNotPresent
+
+replicas: 1
+
+strategy:
+  type: Recreate
+
+webhook:
+  enabled: false
+  create: false
+
+rbac:
+  create: true
+
+operatorPod:
+  podSecurityContext:
+    runAsUser: 1000790001
+    runAsGroup: 1000790001
+    fsGroup: 1000790001
+  securityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+    seccompProfile:
+      type: RuntimeDefault

@@ -1,0 +1,107 @@
+apiVersion: flink.apache.org/v1beta1
+kind: FlinkDeployment
+metadata:
+  name: basic-flink-deployment
+  namespace: confluent-platform
+spec:
+  image: quay.io/tonyfieit75/flink:1.17-s390x-rocksdb
+  flinkVersion: v1_17
+  serviceAccount: flink
+
+  flinkConfiguration:
+    high-availability.type: kubernetes
+    high-availability.storageDir: file:///flink/ha
+    jobmanager.rpc.address: basic-flink-deployment
+
+    taskmanager.numberOfTaskSlots: "2"
+
+    # ----- RocksDB state backend -----
+    state.backend: rocksdb
+    state.backend.rocksdb.memory.managed: "true"
+    state.backend.incremental: "true"
+    state.backend.rocksdb.localdir: /flink-data/rocksdb
+    state.backend.rocksdb.metrics.enabled: "true"
+
+    # Checkpoint/savepoint locations (PVC-backed)
+    state.checkpoints.dir: file:///flink/checkpoints
+    state.savepoints.dir: file:///flink/savepoints
+    execution.checkpointing.savepoint-dir: file:///flink/savepoints
+    execution.checkpointing.interval: "60s"
+    execution.checkpointing.externalized-checkpoint-retention: "RETAIN_ON_CANCELLATION"
+
+    job-result-store.storage-path: file:///flink/ha/job-result-store
+    job-result-store.delete-on-commit: "false"
+
+    kubernetes.rest-service.exposed.type: ClusterIP
+    web.cancel.enable: "false"
+    execution.submit-failed-job-on-application-error: "true"
+    execution.shutdown-on-application-finish: "false"
+    parallelism.default: "2"
+
+  jobManager:
+    replicas: 1
+    resource:
+      memory: "1024m"
+      cpu: 0.5
+    podTemplate:
+      spec:
+        volumes:
+          - name: flink-logs
+            persistentVolumeClaim:
+              claimName: flink-logs-pvc
+          - name: flink-data
+            persistentVolumeClaim:
+              claimName: flink-data
+          - name: flink-ha
+            persistentVolumeClaim:
+              claimName: flink-ha-pvc
+        containers:
+          - name: flink-main-container
+            volumeMounts:
+              - name: flink-logs
+                mountPath: /opt/flink/log
+              - name: flink-data
+                mountPath: /flink-data
+              - name: flink-ha
+                mountPath: /flink
+
+  taskManager:
+    replicas: 3
+    resource:
+      memory: "2048m"
+      cpu: 1.0
+    podTemplate:
+      spec:
+        volumes:
+          - name: flink-logs
+            persistentVolumeClaim:
+              claimName: flink-logs-pvc
+          - name: flink-data
+            persistentVolumeClaim:
+              claimName: flink-data
+          - name: flink-ha
+            persistentVolumeClaim:
+              claimName: flink-ha-pvc
+        containers:
+          - name: flink-main-container
+            volumeMounts:
+              - name: flink-logs
+                mountPath: /opt/flink/log
+              - name: flink-data
+                mountPath: /flink-data
+              - name: flink-ha
+                mountPath: /flink
+
+  ingress:
+    template: "{{name}}.example.com"
+    className: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: "/"
+
+  job:
+    jarURI: local:///opt/flink/examples/streaming/TopSpeedWindowing.jar
+    entryClass: org.apache.flink.streaming.examples.windowing.TopSpeedWindowing
+    parallelism: 3
+    upgradeMode: stateless
+    state: running
+

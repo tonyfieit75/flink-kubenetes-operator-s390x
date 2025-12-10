@@ -1,0 +1,36 @@
+apiVersion: flink.apache.org/v1beta1
+kind: FlinkDeployment
+metadata:
+  name: flink-session-cluster
+  namespace: flink-operator
+spec:
+  image: quay.io/tonyfieit75/flink:1.17-s390x
+  flinkVersion: v1_17
+  flinkConfiguration:
+    taskmanager.numberOfTaskSlots: "2"
+    kubernetes.rest-service.exposed.type: ClusterIP
+    kubernetes.jobmanager.cpu: "1"
+    kubernetes.taskmanager.cpu: "1"
+    taskmanager.memory.process.size: "2048m"
+    jobmanager.memory.process.size: "2048m"
+    high-availability: org.apache.flink.kubernetes.highavailability.KubernetesHaServicesFactory
+    high-availability.storageDir: file:///flink/ha
+  serviceAccount: flink
+  mode: standalone
+  jobManager:
+    replicas: 1
+    resource:
+      memory: "2048m"
+      cpu: 1
+  taskManager:
+    replicas: 2
+    resource:
+      memory: "2048m"
+      cpu: 1
+  ingress:
+    ingressClassName: nginx
+    template: "{{name}}.example.com"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /
+    path: /
+

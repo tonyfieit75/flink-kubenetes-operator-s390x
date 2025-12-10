@@ -1,0 +1,15 @@
+flink-conf.yaml: |
+  taskmanager.numberOfTaskSlots: 1
+  parallelism.default: 1
+
+  # ─── Disable ALL savepoints globally and permanently ─────────────────────────
+  kubernetes.operator.periodic.savepoint.enabled: false
+  kubernetes.operator.periodic.savepoint.interval: 0
+  kubernetes.operator.observer.savepoint.trigger.grace-period: 0
+  kubernetes.operator.job.upgrade.ignore-pending-savepoint: true
+  kubernetes.operator.savepoint.history.max-age: 0
+
+  # Required Java opts
+  kubernetes.operator.default-configuration.flink-version.v1_18.env.java.opts.all: {{ .Values.defaultConfiguration.javaOptsV18 | quote }}
+  kubernetes.operator.default-configuration.flink-version.v1_19+.env.java.default-opts.all: {{ .Values.defaultConfiguration.javaOptsV19 | quote }}
+

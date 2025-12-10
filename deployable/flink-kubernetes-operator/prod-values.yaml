@@ -1,0 +1,20 @@
+image:
+  repository: quay.io/tonyfieit75/flink-kubernetes-operator
+  tag: "s390x-1.13"
+  pullPolicy: IfNotPresent
+
+webhook:
+  enabled: false
+
+operatorPod:
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+replicas: 1
+strategy:
+  type: Recreate

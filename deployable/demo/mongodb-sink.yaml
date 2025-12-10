@@ -1,0 +1,58 @@
+apiVersion: flink.apache.org/v1beta1
+kind: FlinkDeployment
+metadata:
+  name: flink-mongodb-sink
+  namespace: confluent-platform
+
+spec:
+  image: quay.io/tonyfieit75/flink:1.17-s390x
+  flinkVersion: v1_17
+
+  serviceAccount: flink
+
+  flinkConfiguration:
+    taskmanager.numberOfTaskSlots: "1"
+    parallelism.default: "1"
+
+    kubernetes.operator.periodic.savepoint.enabled: "false"
+    kubernetes.operator.periodic.savepoint.interval: "0"
+    kubernetes.operator.observer.savepoint.trigger.grace-period: "0"
+    kubernetes.operator.job.upgrade.ignore-pending-savepoint: "true"
+
+    execution.checkpointing.savepoint-dir: "file:///tmp/savepoints"
+
+  jobManager:
+    resource:
+      cpu: 0.5
+      memory: "1024m"
+    replicas: 1
+
+  taskManager:
+    resource:
+      cpu: 0.5
+      memory: "1024m"
+    replicas: 1
+
+  job:
+    state: running
+    upgradeMode: stateless
+    parallelism: 1
+
+    sql:
+      statements: |
+        CREATE TABLE mongo_sink (
+            id STRING,
+            customer STRING,
+            amount DOUBLE,
+            ts TIMESTAMP(3),
+            WATERMARK FOR ts AS ts - INTERVAL '5' SECOND
+        ) WITH (
+            'connector' = 'mongodb',
+            'connection.uri' =
+              'mongodb://admin:Snowball2025!@mongo-ent.mongo-ent.mongodb-ent.svc.cluster.local:27017/?replicaSet=rs0&authSource=admin',
+            'database' = 'flinkdemo',
+            'collection' = 'transactions',
+            'sink.write-mode' = 'insert',
+            'format' = 'json'
+        );
+

@@ -1,0 +1,71 @@
+apiVersion: flink.apache.org/v1beta1
+kind: FlinkDeployment
+metadata:
+  name: basic-flink-deployment
+  namespace: confluent-platform
+spec:
+  image: quay.io/tonyfieit75/flink:1.17-s390x-rocksdb
+  flinkVersion: v1_17
+  serviceAccount: flink
+
+  flinkConfiguration:
+    execution.checkpointing.savepoint-dir: file:///flink-data/savepoints
+    state.checkpoints.dir: file:///flink-data/checkpoints
+    state.savepoints.dir: file:///flink-data/savepoints
+
+  jobManager:
+    replicas: 1
+    resource:
+      memory: "1024m"
+      cpu: 0.5
+    podTemplate:
+      spec:
+        volumes:
+          - name: flink-logs
+            persistentVolumeClaim:
+              claimName: flink-logs-pvc
+          - name: flink-data
+            persistentVolumeClaim:
+              claimName: flink-data
+        containers:
+          - name: flink-main-container
+            volumeMounts:
+              - name: flink-logs
+                mountPath: /opt/flink/log
+              - name: flink-data
+                mountPath: /flink-data
+
+  taskManager:
+    replicas: 2
+    resource:
+      memory: "2048m"
+      cpu: 1.0
+    podTemplate:
+      spec:
+        volumes:
+          - name: flink-logs
+            persistentVolumeClaim:
+              claimName: flink-logs-pvc
+          - name: flink-data
+            persistentVolumeClaim:
+              claimName: flink-data
+        containers:
+          - name: flink-main-container
+            volumeMounts:
+              - name: flink-logs
+                mountPath: /opt/flink/log
+              - name: flink-data
+                mountPath: /flink-data
+
+  ingress:
+    template: "{{name}}.example.com"
+    className: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /
+
+  job:
+    jarURI: local:///opt/flink/examples/streaming/TopSpeedWindowing.jar
+    parallelism: 2
+    upgradeMode: stateless
+    entryClass: org.apache.flink.streaming.examples.windowing.TopSpeedWindowing
+

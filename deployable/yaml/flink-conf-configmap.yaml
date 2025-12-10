@@ -1,0 +1,24 @@
+# flink-conf-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flink-conf
+  namespace: confluent-platform
+data:
+  flink-conf.yaml: |
+    jobmanager.rpc.address: basic-flink-deployment
+    state.backend: filesystem
+    state.checkpoints.dir: file:///flink/checkpoints
+    state.savepoints.dir: file:///flink/savepoints
+    execution.checkpointing.savepoint-dir: file:///flink/savepoints
+    high-availability: v1
+    high-availability.storageDir: file:///flink/ha
+    execution.checkpointing.interval: 60s
+    execution.checkpointing.externalized-checkpoint-retention: RETAIN_ON_CANCELLATION
+    job-result-store.storage-path: file:///flink/ha/job-result-store
+    job-result-store.delete-on-commit: "false"
+    kubernetes.rest-service.exposed.type: ClusterIP
+    web.cancel.enable: "false"
+    execution.submit-failed-job-on-application-error: "true"
+    execution.shutdown-on-application-finish: "false"
+    parallelism.default: 2

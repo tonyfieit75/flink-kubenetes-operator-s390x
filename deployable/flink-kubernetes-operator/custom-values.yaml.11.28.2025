@@ -1,0 +1,71 @@
+image:
+  repository: quay.io/tonyfieit75/flink-kubernetes-operator
+  tag: "s390x-1.13"
+  pullPolicy: IfNotPresent
+
+replicas: 1
+
+strategy:
+  type: Recreate
+
+rbac:
+  create: true
+  operatorRole:
+    create: true
+    name: "flink-operator"
+  operatorRoleBinding:
+    create: true
+    name: "flink-operator-role-binding"
+  jobRole:
+    create: true
+    name: "flink"
+  jobRoleBinding:
+    create: true
+    name: "flink-role-binding"
+
+operatorPod:
+  podSecurityContext:
+    runAsUser: 1000790001
+    runAsGroup: 1000790001
+    fsGroup: 1000790001
+  securityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: [ "ALL" ]
+    seccompProfile:
+      type: RuntimeDefault
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+
+webhook:
+  enabled: false
+  create: false
+  securityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: [ "ALL" ]
+    seccompProfile:
+      type: RuntimeDefault
+  resources:
+    limits:
+      cpu: "250m"
+      memory: "512Mi"
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+
+defaultConfiguration:
+  create: true
+  flink-conf.yaml: |
+    kubernetes.operator.periodic.savepoint.interval: 10m
+  log4j-operator.properties: |
+    rootLogger.level = INFO
+  log4j-console.properties: |
+    rootLogger.level = INFO
