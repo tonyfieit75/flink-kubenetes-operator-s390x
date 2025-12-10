@@ -91,7 +91,7 @@ This performs:
 ### 1. Verify Pods
 
 ```bash
-oc get pods -n flink-operator
+oc get pods -n confluent-platform
 ```
 
 Expected:
@@ -150,7 +150,7 @@ Located in `flink-kubernetes-operator/`, you may customize the chart and deploy 
 
 ```bash
 helm upgrade --install flink-operator ./flink-kubernetes-operator \
-  --namespace flink-operator --create-namespace \
+  --namespace confluent-platform --create-namespace \
   --values ./flink-kubernetes-operator/prod-values.yaml
 ```
 
